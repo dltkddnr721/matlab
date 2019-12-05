@@ -1,0 +1,112 @@
+clc
+clear all
+clear figure
+sample=100;
+x(1)=0;
+y(1)=0;%초기좌표
+n_select=1;
+pp=0; %반복횟수
+a=5;
+q=a/20;%q는 Boundary에서 일정 거리만큼 떨어지기 위한 변수
+b=2*a/sqrt(sample); %b의 값이 limited area값을 sample의 루트로 나눠줘 x0값을 구함
+e=b+a/10; % e = b + k에서 k=0이면 점들이 원모양으로 모여 +k상수를 해줌
+past_position_energy=0;
+new_position_energy=0;
+f=2;
+
+
+%% 샘플 점 찍기(초기 점의 위치 figure(1))
+for i=2:1:sample
+    x(i)=(rand(1)*2-1)*a;
+    y(i)=(rand(1)*2-1)*a;
+    %     if (x<0.95*a & y<0.95*a & -0.95*a<x & -0.95*a<y);
+    %         break
+    %         i=i-1
+    %     end
+end
+
+figure(1)
+plot(x,y,'.'),ylabel('position ');%점을 1000개 찍음
+axis([-a  a -a a])
+%% figure(1)의 점들에 대한 값
+while(pp<100)%반복횟수
+    for j=1:1:sample
+        temp(j,1)=j;
+        temp(j,2)=x(j);
+        temp(j,3)=y(j); %temp 1열:점인덱스 2열:x좌표 3열:y좌표
+        
+    end
+    %     past_position_energy=0;
+    for j=1:1:sample
+        for m=1:1:sample
+            p_distance=sqrt((temp(j,2)-temp(m,2))^2+(temp(j,3)-temp(m,3))^2);
+            temp(m,4)=p_distance;
+        end
+        
+        temp_1= sortrows(temp,4);
+        for k=2:1:5
+            past_position_energy=past_position_energy+0.5*(temp_1(k,4)-e)^2;
+        end
+        
+        while 1
+            c=a/10; %이동할 수 있는 거리는 a의 0.1배로 설정
+            dx=(rand(1)-0.5)*c;
+            dy=(rand(1)-0.5)*c;
+            tempx=x(j)+dx;
+            tempy=y(j)+dy;
+            
+            if (tempx<a-q & tempy<a-q & -a+q<tempx & -a+q<tempy);%범위를 벗어나는 점이 없도록 하기위함
+                break
+            end
+        end
+        
+        %         new_position_energy = 0.5*((sqrt((temp_1(2,2)-tempx)^2+(temp_1(2,3)-tempy)^2)-e)^2 +(sqrt((temp_1(3,2)-tempx)^2+(temp_1(3,3)-tempy)^2)-e)^2 + (sqrt((temp_1(4,2)-tempx)^2+(temp_1(4,3)-tempy)^2)-e)^2 + (sqrt((temp_1(5,2)-tempx)^2+(temp_1(5,3)-tempy)^2)-e)^2);
+        for m=2:1:5
+            new_position_energy= new_position_energy + 0.5*(sqrt((temp_1(m,2)-tempx)^2+(temp_1(m,3)-tempy)^2)-e)^2;
+        end
+        %새로 이동한 점의 에너지
+        if (new_position_energy < past_position_energy)
+            x(j)=tempx;
+            y(j)=tempy;
+        end
+        past_position_energy=0;
+        new_position_energy=0;
+        
+        
+    end
+    pp=pp+1
+    if rem(pp,100000)==0
+        figure(f)
+        plot(x,y,'.'),ylabel('position ');
+        axis([-a  a -a a]);
+        f=f+1;
+    end
+end
+figure(9999)
+
+plot(x,y,'.'),ylabel('position ');%점을 1000개 찍음
+axis([-a  a -a a])
+
+
+for i=1: 1 : sample
+    value_test(i,1)=i;
+    value_test(i,2)=x(i);
+    value_test(i,3)=y(i); %temp 1열:점인덱스 2열:x좌표 3열:y좌표
+end
+for j=1:1:sample
+    
+    for m=1:1:sample
+        value_test_distance=sqrt((value_test(j,2)-value_test(m,2))^2+(value_test(j,3)-value_test(m,3))^2);
+        value_test(m,4)=value_test_distance;
+    end
+    
+    value_test_1= sortrows(value_test,4);
+    final_position_energy(j) = 0.5*((value_test_1(2,4)-e)^2+(value_test_1(3,4)-e)^2+(value_test_1(4,4)-e)^2+(value_test_1(5,4)-e)^2);
+end
+min_value = min(final_position_energy);
+max_value = max(final_position_energy);
+min_value
+max_value
+
+%해결해야할 것
+%1.임의로 점이 찍힐때 처음으로 찍힌 점이 Boundary에 걸쳐있는경우 이동하지 않음
